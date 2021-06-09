@@ -115,16 +115,16 @@ resource "aws_route_table_association" "private" {
 /*====
 VPC's Default Security Group
 ======*/
-resource "aws_security_group" "default" {
-  name        = "${var.environment}-default-sg"
+resource "aws_security_group" "EC2-SG" {
+  name        = "${var.environment}-EC2-instance-sg"
   description = "Default security group to allow inbound/outbound from the VPC"
   vpc_id      = "${aws_vpc.vpc.id}"
   depends_on  = [aws_vpc.vpc]
 
   ingress {
-    from_port = "0"
-    to_port   = "0"
-    protocol  = "-1"
+    from_port = "22"
+    to_port   = "22"
+    protocol  = "tcp"
     self      = true
   }
 
@@ -134,6 +134,34 @@ resource "aws_security_group" "default" {
     protocol  = "-1"
     self      = "true"
   }
+
+  tags = {
+    Environment = "${var.environment}"
+  }
+}
+
+
+
+# creating the security group for the private subnet 
+
+resource "aws_security_group" "RDS-SG" {
+  name = "${var.environment}-RDS-instance-SG"
+  description = "RDS postgres servers"
+  vpc_id = "${aws_vpc.vpc.id}"
+  ingress {
+    from_port = 5432
+    to_port = 5432
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  # Allow all outbound traffic.
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
 
   tags = {
     Environment = "${var.environment}"
